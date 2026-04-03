@@ -1,84 +1,107 @@
-# Knowledge Hub
+# Knowledge Hub API
+
+REST API for a knowledge-sharing platform built with NestJS. Manage users, articles, categories, and comments with in-memory storage.
 
 ## Prerequisites
 
 - Git - [Download & Install Git](https://git-scm.com/downloads).
 - Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
 
-## Downloading
+## Requirements
 
-```
-git clone {repository URL}
-```
+- Node.js >= 24.10.0
 
-## Installing NPM modules
+## Setup
 
-```
+```bash
+git clone <repository-url>
+cd nodejs-2026q1-knowledge-hub
 npm install
+cp .env.example .env
 ```
 
-## Running application
+## Running
 
-```
+```bash
+# Development (watch mode)
+npm run start:dev
+
+# Production
 npm start
 ```
 
-After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
-For more information about OpenAPI/Swagger please visit https://swagger.io/.
+App runs on **http://localhost:4000** by default (configurable via `PORT` in `.env`).
+
+## Swagger UI
+
+Interactive API docs available at **http://localhost:4000/doc/** once the server is running.
+
+Raw OpenAPI spec: http://localhost:4000/doc-json
+
+## Endpoints
+
+### Users `/user`
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/user` | Get all users |
+| GET | `/user/:id` | Get user by ID |
+| POST | `/user` | Create user |
+| PUT | `/user/:id` | Update password |
+| DELETE | `/user/:id` | Delete user |
+
+### Articles `/article`
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/article` | Get all articles (supports `?status=`, `?categoryId=`, `?tag=`) |
+| GET | `/article/:id` | Get article by ID |
+| POST | `/article` | Create article |
+| PUT | `/article/:id` | Update article |
+| DELETE | `/article/:id` | Delete article |
+
+### Categories `/category`
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/category` | Get all categories |
+| GET | `/category/:id` | Get category by ID |
+| POST | `/category` | Create category |
+| PUT | `/category/:id` | Update category |
+| DELETE | `/category/:id` | Delete category |
+
+### Comments `/comment`
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/comment?articleId=` | Get comments for an article |
+| POST | `/comment` | Create comment |
+| DELETE | `/comment/:id` | Delete comment |
+
+### Pagination & Sorting
+
+All list endpoints support optional query params:
+
+| Param | Description | Example |
+|-------|-------------|---------|
+| `page` | 1-based page number | `?page=1&limit=10` |
+| `limit` | Items per page | `?page=1&limit=10` |
+| `sortBy` | Field name to sort by | `?sortBy=createdAt` |
+| `order` | `asc` or `desc` (default `asc`) | `?sortBy=createdAt&order=desc` |
+
+When `page` and `limit` are provided, response shape is:
+```json
+{ "total": 42, "page": 1, "limit": 10, "data": [...] }
+```
 
 ## Testing
 
-After application running open new terminal and enter:
+The app must be running before executing tests.
 
-To run all tests without authorization
+```bash
+# Run base test suite
+npm test
 
-```
-npm run test
-```
+# Run a single suite
+npm run test -- test/users.e2e.spec.ts
 
-To run only one of all test suites
-
-```
-npm run test -- <path to suite>
-```
-
-To run all test with authorization
-
-```
-npm run test:auth
-```
-
-To run only specific test suite with authorization
-
-```
-npm run test:auth -- <path to suite>
-```
-
-To run refresh token tests
-
-```
-npm run test:refresh
-```
-
-To run RBAC (role-based access control) tests
-
-```
-npm run test:rbac
-```
-
-### Auto-fix and format
-
-```
+# Code quality
 npm run lint
-```
-
-```
 npm run format
 ```
-
-### Debugging in VSCode
-
-Press <kbd>F5</kbd> to debug.
-
-For more information, visit: https://code.visualstudio.com/docs/editor/debugging

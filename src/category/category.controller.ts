@@ -9,8 +9,16 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { sortItems, paginate } from '../common/list.helpers';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -21,10 +29,33 @@ export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @ApiOperation({ summary: 'Get all categories' })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    description: 'Field to sort by',
+  })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '1-based page number',
+  })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'List of all categories' })
   @Get()
-  findAll() {
-    return this.categoryService.findAll();
+  findAll(
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const items = this.categoryService.findAll();
+    const sorted = sortItems(items, sortBy, order);
+    return paginate(
+      sorted,
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
   }
 
   @ApiOperation({ summary: 'Get category by ID' })

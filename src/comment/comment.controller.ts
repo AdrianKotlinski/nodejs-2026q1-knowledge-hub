@@ -17,6 +17,7 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
+import { sortItems, paginate } from '../common/list.helpers';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
@@ -27,10 +28,34 @@ export class CommentController {
 
   @ApiOperation({ summary: 'Get all comments for an article' })
   @ApiQuery({ name: 'articleId', required: true, description: 'Article UUID' })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    description: 'Field to sort by',
+  })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '1-based page number',
+  })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'List of comments' })
   @Get()
-  findByArticle(@Query('articleId') articleId: string) {
-    return this.commentService.findByArticle(articleId);
+  findByArticle(
+    @Query('articleId') articleId: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const items = this.commentService.findByArticle(articleId);
+    const sorted = sortItems(items, sortBy, order);
+    return paginate(
+      sorted,
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
   }
 
   @ApiOperation({ summary: 'Get comment by ID' })

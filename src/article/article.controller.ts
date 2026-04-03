@@ -18,6 +18,7 @@ import {
   ApiParam,
   ApiQuery,
 } from '@nestjs/swagger';
+import { sortItems, paginate } from '../common/list.helpers';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -39,14 +40,36 @@ export class ArticleController {
     description: 'Filter by category UUID',
   })
   @ApiQuery({ name: 'tag', required: false, description: 'Filter by tag name' })
+  @ApiQuery({
+    name: 'sortBy',
+    required: false,
+    description: 'Field to sort by',
+  })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '1-based page number',
+  })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'List of articles' })
   @Get()
   findAll(
     @Query('status') status?: string,
     @Query('categoryId') categoryId?: string,
     @Query('tag') tag?: string,
+    @Query('sortBy') sortBy?: string,
+    @Query('order') order?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.articleService.findAll(status, categoryId, tag);
+    const items = this.articleService.findAll(status, categoryId, tag);
+    const sorted = sortItems(items, sortBy, order);
+    return paginate(
+      sorted,
+      page ? Number(page) : undefined,
+      limit ? Number(limit) : undefined,
+    );
   }
 
   @ApiOperation({ summary: 'Get article by ID' })
