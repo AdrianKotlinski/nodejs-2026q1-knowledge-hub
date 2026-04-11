@@ -1,12 +1,13 @@
 # Knowledge Hub API
 
 REST API for a knowledge-sharing platform built with NestJS. Manage users, articles, categories, and comments.
+[Repository](https://github.com/AdrianKotlinski/nodejs-2026q1-knowledge-hub)
 
 ## Prerequisites
 
 - Git - [Download & Install Git](https://git-scm.com/downloads).
 - Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
-- Docker & Docker Compose - [Download & Install Docker](https://docs.docker.com/get-docker/).
+- Docker & Docker Compose - [Download & Install Docker](https://docs.docker.com/get-started/get-docker/).
 
 ## Requirements
 
@@ -87,6 +88,9 @@ npx prisma init --datasource-provider postgresql
 
 # Migration
 npx prisma migrate dev --name init
+
+# Seed 
+npx prisma db seed
 ```
 
 ## Swagger UI

@@ -54,7 +54,8 @@ export class ArticleService {
       data: {
         title: dto.title,
         content: dto.content,
-        status: (dto.status ?? ArticleStatusEnum.DRAFT) as unknown as ArticleStatus,
+        status: (dto.status ??
+          ArticleStatusEnum.DRAFT) as unknown as ArticleStatus,
         authorId: dto.authorId ?? null,
         categoryId: dto.categoryId ?? null,
         tags: { connectOrCreate: tagConnectOrCreate(dto.tags ?? []) },

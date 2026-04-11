@@ -10,6 +10,12 @@ import { CommentModule } from './comment/comment.module';
 @Module({
   controllers: [AppController],
   providers: [AppService],
-  imports: [PrismaModule, UserModule, CategoryModule, ArticleModule, CommentModule],
+  imports: [
+    PrismaModule,
+    UserModule,
+    CategoryModule,
+    ArticleModule,
+    CommentModule,
+  ],
 })
 export class AppModule {}
