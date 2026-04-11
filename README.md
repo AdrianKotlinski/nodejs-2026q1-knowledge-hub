@@ -1,11 +1,36 @@
 # Knowledge Hub API
 
-REST API for a knowledge-sharing platform built with NestJS. Manage users, articles, categories, and comments with in-memory storage.
+REST API for a knowledge-sharing platform built with NestJS. Manage users, articles, categories, and comments.
+
+## Docker Hub
+
+Image: [adriankotlinskiepam/knowledge-hub-api](https://hub.docker.com/r/adriankotlinskiepam/knowledge-hub-api)
+
+```bash
+# Pull docker image
+docker pull adriankotlinskiepam/knowledge-hub-api:latest
+
+# Run it                                               
+docker run -p 4000:4000 --env-file .env adriankotlinskiepam/knowledge-hub-api:latest  
+
+# Build docker image
+docker build -t adriankotlinskiepam/knowledge-hub-api:latest .
+
+# Push docker image to Docker hub
+docker push adriankotlinski/knowledge-hub-api:latest
+
+# Security scan
+docker scout cves adriankotlinskiepam/knowledge-hub-api:latest
+
+# Docker compose
+docker-compose up --build
+```
 
 ## Prerequisites
 
 - Git - [Download & Install Git](https://git-scm.com/downloads).
 - Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
+- Docker & Docker Compose - [Download & Install Docker](https://docs.docker.com/get-docker/).
 
 ## Requirements
 
@@ -16,17 +41,42 @@ REST API for a knowledge-sharing platform built with NestJS. Manage users, artic
 ```bash
 git clone <repository-url>
 cd nodejs-2026q1-knowledge-hub
-npm install
 cp .env.example .env
 ```
 
-## Running
+## Running with Docker
+
+The recommended way to run the full stack (app + PostgreSQL database).
 
 ```bash
+# Build and start all services
+docker-compose up --build
+
+# Start in detached (background) mode
+docker-compose up --build -d
+
+# Start with Adminer DB browser UI at http://localhost:8080
+docker-compose --profile debug up --build
+
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (clears database data)
+docker-compose down -v
+```
+
+App runs on **http://localhost:4000** once healthy.
+
+## Running Locally (without Docker)
+
+```bash
+npm install
+
 # Development (watch mode)
 npm run start:dev
 
-# Production
+# Production build
+npm run build
 npm start
 ```
 
