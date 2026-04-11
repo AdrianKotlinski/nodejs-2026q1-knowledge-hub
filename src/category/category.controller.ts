@@ -43,13 +43,13 @@ export class CategoryController {
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'List of all categories' })
   @Get()
-  findAll(
+  async findAll(
     @Query('sortBy') sortBy?: string,
     @Query('order') order?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const items = this.categoryService.findAll();
+    const items = await this.categoryService.findAll();
     const sorted = sortItems(items, sortBy, order);
     return paginate(
       sorted,

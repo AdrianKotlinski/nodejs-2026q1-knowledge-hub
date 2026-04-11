@@ -42,14 +42,14 @@ export class CommentController {
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'List of comments' })
   @Get()
-  findByArticle(
+  async findByArticle(
     @Query('articleId') articleId: string,
     @Query('sortBy') sortBy?: string,
     @Query('order') order?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const items = this.commentService.findByArticle(articleId);
+    const items = await this.commentService.findByArticle(articleId);
     const sorted = sortItems(items, sortBy, order);
     return paginate(
       sorted,
