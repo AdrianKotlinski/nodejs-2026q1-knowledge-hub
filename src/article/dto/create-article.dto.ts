@@ -7,7 +7,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { ArticleStatus } from '../../db/in-memory.store';
+import { ArticleStatus } from '../../common/enums';
 
 export class CreateArticleDto {
   @ApiProperty({ example: 'Getting Started with NestJS' })

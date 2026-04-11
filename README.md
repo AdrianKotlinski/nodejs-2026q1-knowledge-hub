@@ -2,6 +2,23 @@
 
 REST API for a knowledge-sharing platform built with NestJS. Manage users, articles, categories, and comments.
 
+## Prerequisites
+
+- Git - [Download & Install Git](https://git-scm.com/downloads).
+- Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
+- Docker & Docker Compose - [Download & Install Docker](https://docs.docker.com/get-docker/).
+
+## Requirements
+
+- Node.js >= 24.10.0
+
+## Setup
+
+```bash
+git clone <repository-url>
+cd nodejs-2026q1-knowledge-hub
+cp .env.example .env
+```
 ## Docker Hub
 
 Image: [adriankotlinskiepam/knowledge-hub-api](https://hub.docker.com/r/adriankotlinskiepam/knowledge-hub-api)
@@ -22,26 +39,6 @@ docker push adriankotlinski/knowledge-hub-api:latest
 # Security scan
 docker scout cves adriankotlinskiepam/knowledge-hub-api:latest
 
-# Docker compose
-docker-compose up --build
-```
-
-## Prerequisites
-
-- Git - [Download & Install Git](https://git-scm.com/downloads).
-- Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
-- Docker & Docker Compose - [Download & Install Docker](https://docs.docker.com/get-docker/).
-
-## Requirements
-
-- Node.js >= 24.10.0
-
-## Setup
-
-```bash
-git clone <repository-url>
-cd nodejs-2026q1-knowledge-hub
-cp .env.example .env
 ```
 
 ## Running with Docker
@@ -81,6 +78,16 @@ npm start
 ```
 
 App runs on **http://localhost:4000** by default (configurable via `PORT` in `.env`).
+
+## Prisma
+
+```bash
+# Init
+npx prisma init --datasource-provider postgresql
+
+# Migration
+npx prisma migrate dev --name init
+```
 
 ## Swagger UI
 
