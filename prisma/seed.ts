@@ -2,6 +2,10 @@ import 'dotenv/config';
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as bcrypt from 'bcrypt';
+import { v5 as uuidv5 } from 'uuid';
+
+const SEED_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+const id = (name: string) => uuidv5(name, SEED_NAMESPACE);
 
 const prisma = new (PrismaClient as any)({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -32,30 +36,30 @@ async function main() {
 
   // ── Categories ─────────────────────────────────────────────────────────────
   const catTS = await prisma.category.upsert({
-    where: { id: 'cat00000-0000-0000-0000-000000000001' },
+    where: { id: id('category-typescript') },
     update: {},
     create: {
-      id: 'cat00000-0000-0000-0000-000000000001',
+      id: id('category-typescript'),
       name: 'TypeScript',
       description: 'TypeScript language articles',
     },
   });
 
   const catNode = await prisma.category.upsert({
-    where: { id: 'cat00000-0000-0000-0000-000000000002' },
+    where: { id: id('category-nodejs') },
     update: {},
     create: {
-      id: 'cat00000-0000-0000-0000-000000000002',
+      id: id('category-nodejs'),
       name: 'Node.js',
       description: 'Node.js runtime articles',
     },
   });
 
   const catNest = await prisma.category.upsert({
-    where: { id: 'cat00000-0000-0000-0000-000000000003' },
+    where: { id: id('category-nestjs') },
     update: {},
     create: {
-      id: 'cat00000-0000-0000-0000-000000000003',
+      id: id('category-nestjs'),
       name: 'NestJS',
       description: 'NestJS framework articles',
     },
@@ -67,11 +71,12 @@ async function main() {
   }
 
   // ── Articles ───────────────────────────────────────────────────────────────
+  const article1Id = id('article-getting-started-nestjs');
   await prisma.article.upsert({
-    where: { id: 'art00000-0000-0000-0000-000000000001' },
+    where: { id: article1Id },
     update: {},
     create: {
-      id: 'art00000-0000-0000-0000-000000000001',
+      id: article1Id,
       title: 'Getting Started with NestJS',
       content: 'NestJS is a progressive Node.js framework for building efficient server-side applications.',
       status: 'published',
@@ -86,11 +91,12 @@ async function main() {
     },
   });
 
+  const article2Id = id('article-typescript-generics');
   await prisma.article.upsert({
-    where: { id: 'art00000-0000-0000-0000-000000000002' },
+    where: { id: article2Id },
     update: {},
     create: {
-      id: 'art00000-0000-0000-0000-000000000002',
+      id: article2Id,
       title: 'TypeScript Generics Deep Dive',
       content: 'Generics allow us to create reusable, type-safe components in TypeScript.',
       status: 'published',
@@ -105,10 +111,10 @@ async function main() {
   });
 
   await prisma.article.upsert({
-    where: { id: 'art00000-0000-0000-0000-000000000003' },
+    where: { id: id('article-nodejs-event-loop') },
     update: {},
     create: {
-      id: 'art00000-0000-0000-0000-000000000003',
+      id: id('article-nodejs-event-loop'),
       title: 'Node.js Event Loop Explained',
       content: 'The event loop is what allows Node.js to perform non-blocking I/O operations.',
       status: 'draft',
@@ -124,10 +130,10 @@ async function main() {
   });
 
   await prisma.article.upsert({
-    where: { id: 'art00000-0000-0000-0000-000000000004' },
+    where: { id: id('article-rest-apis-nestjs') },
     update: {},
     create: {
-      id: 'art00000-0000-0000-0000-000000000004',
+      id: id('article-rest-apis-nestjs'),
       title: 'Building REST APIs with NestJS',
       content: 'REST APIs are a common way to expose data and business logic to clients.',
       status: 'published',
@@ -143,10 +149,10 @@ async function main() {
   });
 
   await prisma.article.upsert({
-    where: { id: 'art00000-0000-0000-0000-000000000005' },
+    where: { id: id('article-nodejs-v18-features') },
     update: {},
     create: {
-      id: 'art00000-0000-0000-0000-000000000005',
+      id: id('article-nodejs-v18-features'),
       title: 'Node.js v18 Features Overview',
       content: 'Node.js v18 introduced fetch API, test runner, and other improvements.',
       status: 'archived',
@@ -162,34 +168,34 @@ async function main() {
 
   // ── Comments ───────────────────────────────────────────────────────────────
   await prisma.comment.upsert({
-    where: { id: 'cmt00000-0000-0000-0000-000000000001' },
+    where: { id: id('comment-great-introduction') },
     update: {},
     create: {
-      id: 'cmt00000-0000-0000-0000-000000000001',
+      id: id('comment-great-introduction'),
       content: 'Great introduction to NestJS!',
-      articleId: 'art00000-0000-0000-0000-000000000001',
+      articleId: article1Id,
       authorId: editor.id,
     },
   });
 
   await prisma.comment.upsert({
-    where: { id: 'cmt00000-0000-0000-0000-000000000002' },
+    where: { id: id('comment-more-examples') },
     update: {},
     create: {
-      id: 'cmt00000-0000-0000-0000-000000000002',
+      id: id('comment-more-examples'),
       content: 'Would love to see more examples with real projects.',
-      articleId: 'art00000-0000-0000-0000-000000000001',
+      articleId: article1Id,
       authorId: null,
     },
   });
 
   await prisma.comment.upsert({
-    where: { id: 'cmt00000-0000-0000-0000-000000000003' },
+    where: { id: id('comment-generics-helped') },
     update: {},
     create: {
-      id: 'cmt00000-0000-0000-0000-000000000003',
+      id: id('comment-generics-helped'),
       content: 'This helped me understand generics much better.',
-      articleId: 'art00000-0000-0000-0000-000000000002',
+      articleId: article2Id,
       authorId: admin.id,
     },
   });

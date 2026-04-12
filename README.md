@@ -35,7 +35,7 @@ docker run -p 4000:4000 --env-file .env adriankotlinskiepam/knowledge-hub-api:la
 docker build -t adriankotlinskiepam/knowledge-hub-api:latest .
 
 # Push docker image to Docker hub
-docker push adriankotlinski/knowledge-hub-api:latest
+docker push adriankotlinskiepam/knowledge-hub-api:latest
 
 # Security scan
 docker scout cves adriankotlinskiepam/knowledge-hub-api:latest

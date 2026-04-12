@@ -23,7 +23,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 
@@ -34,4 +34,4 @@ EXPOSE 4000
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]

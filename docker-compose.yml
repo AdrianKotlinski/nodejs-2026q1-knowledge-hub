@@ -18,6 +18,22 @@ services:
     restart: unless-stopped
     networks:
       - hub_network
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - hub_network
+
   app:
     build:
       context: .
@@ -27,9 +43,13 @@ services:
       - '4000:4000'
     env_file:
       - .env
+    environment:                                                                                                        
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public 
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
       test: ['CMD-SHELL', 'curl -f http://localhost:4000/ || exit 1']
       interval: 30s

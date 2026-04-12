@@ -4,5 +4,6 @@ logs/
 *.log
 .env
 dist/
+generated/
 .vscode/
 .idea/
