@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { Article, Tag, ArticleStatus } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArticleStatus as ArticleStatusEnum } from '../common/enums';
@@ -51,12 +55,17 @@ export class ArticleService {
 
   async create(dto: CreateArticleDto) {
     if (dto.authorId) {
-      const user = await this.prisma.user.findUnique({ where: { id: dto.authorId } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.authorId },
+      });
       if (!user) throw new UnprocessableEntityException('Author not found');
     }
     if (dto.categoryId) {
-      const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
-      if (!category) throw new UnprocessableEntityException('Category not found');
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category)
+        throw new UnprocessableEntityException('Category not found');
     }
 
     const article = await this.prisma.article.create({
@@ -79,12 +88,17 @@ export class ArticleService {
     if (!exists) throw new NotFoundException('Article not found');
 
     if (dto.authorId) {
-      const user = await this.prisma.user.findUnique({ where: { id: dto.authorId } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.authorId },
+      });
       if (!user) throw new UnprocessableEntityException('Author not found');
     }
     if (dto.categoryId) {
-      const category = await this.prisma.category.findUnique({ where: { id: dto.categoryId } });
-      if (!category) throw new UnprocessableEntityException('Category not found');
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category)
+        throw new UnprocessableEntityException('Category not found');
     }
 
     const article = await this.prisma.article.update({

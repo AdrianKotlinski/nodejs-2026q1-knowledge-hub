@@ -87,10 +87,10 @@ App runs on **http://localhost:4000** by default (configurable via `PORT` in `.e
 npx prisma init --datasource-provider postgresql
 
 # Migration
-npx prisma migrate dev --name init
+npx prisma migrate dev --name init (or npm run db:migrate)
 
 # Seed 
-npx prisma db seed
+npx prisma db seed (or npm run db:seed)
 ```
 
 ## Swagger UI
