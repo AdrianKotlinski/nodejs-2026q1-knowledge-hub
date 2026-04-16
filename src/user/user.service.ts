@@ -60,6 +60,15 @@ export class UserService {
     return toResponse(updated);
   }
 
+  async findByLogin(login: string) {
+    const user = await this.prisma.user.findUnique({ where: { login } });
+    return user ? toResponse(user) : null;
+  }
+
+  async findByLoginWithPassword(login: string) {
+    return this.prisma.user.findUnique({ where: { login } });
+  }
+
   async remove(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
