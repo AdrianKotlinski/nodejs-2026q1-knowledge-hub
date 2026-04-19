@@ -18,6 +18,8 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
@@ -68,6 +70,7 @@ export class CommentController {
     return this.commentService.findOne(id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Create a new comment' })
   @ApiResponse({ status: 201, description: 'Comment created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -78,6 +81,7 @@ export class CommentController {
     return this.commentService.create(dto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Delete a comment' })
   @ApiParam({ name: 'id', description: 'Comment UUID' })
   @ApiResponse({ status: 204, description: 'Comment deleted' })

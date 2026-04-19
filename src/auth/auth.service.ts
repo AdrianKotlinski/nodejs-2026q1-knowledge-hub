@@ -27,7 +27,10 @@ export class AuthService {
   async signup(dto: SignupDto) {
     const existing = await this.userService.findByLogin(dto.login);
     if (existing) throw new BadRequestException('Login already taken');
-    return this.userService.create({ login: dto.login, password: dto.password });
+    return this.userService.create({
+      login: dto.login,
+      password: dto.password,
+    });
   }
 
   async login(dto: LoginDto) {
@@ -37,7 +40,11 @@ export class AuthService {
     const isMatch = await bcrypt.compare(dto.password, user.password);
     if (!isMatch) throw new ForbiddenException('Invalid credentials');
 
-    return this.issueTokens({ sub: user.id, login: user.login, role: user.role as UserRole });
+    return this.issueTokens({
+      sub: user.id,
+      login: user.login,
+      role: user.role as UserRole,
+    });
   }
 
   refresh(dto: RefreshDto) {
@@ -45,7 +52,11 @@ export class AuthService {
       const payload = this.jwtService.verify<JwtPayload>(dto.refreshToken, {
         secret: process.env.JWT_SECRET_REFRESH_KEY,
       });
-      return this.issueTokens({ sub: payload.sub, login: payload.login, role: payload.role });
+      return this.issueTokens({
+        sub: payload.sub,
+        login: payload.login,
+        role: payload.role,
+      });
     } catch {
       throw new ForbiddenException('Invalid or expired refresh token');
     }

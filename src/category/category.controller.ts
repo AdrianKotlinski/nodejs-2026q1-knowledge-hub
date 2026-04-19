@@ -19,6 +19,8 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -68,6 +70,7 @@ export class CategoryController {
     return this.categoryService.findOne(id);
   }
 
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new category' })
   @ApiResponse({ status: 201, description: 'Category created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -77,6 +80,7 @@ export class CategoryController {
     return this.categoryService.create(dto);
   }
 
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Update a category' })
   @ApiParam({ name: 'id', description: 'Category UUID' })
   @ApiResponse({ status: 200, description: 'Category updated' })
@@ -90,6 +94,7 @@ export class CategoryController {
     return this.categoryService.update(id, dto);
   }
 
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete a category' })
   @ApiParam({ name: 'id', description: 'Category UUID' })
   @ApiResponse({ status: 204, description: 'Category deleted' })
