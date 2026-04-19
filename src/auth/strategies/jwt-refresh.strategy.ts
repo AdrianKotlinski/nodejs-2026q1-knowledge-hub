@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { UserRole } from '../../common/enums';
 
 interface JwtPayload {
-  sub: string;
+  userId: string;
   login: string;
   role: UserRole;
 }
@@ -22,6 +22,6 @@ export class JwtRefreshStrategy extends PassportStrategy(
   }
 
   validate(payload: JwtPayload) {
-    return { userId: payload.sub, login: payload.login, role: payload.role };
+    return { userId: payload.userId, login: payload.login, role: payload.role };
   }
 }

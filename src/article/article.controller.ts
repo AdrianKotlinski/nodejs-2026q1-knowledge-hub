@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,6 +18,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -25,6 +27,7 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
+@ApiBearerAuth()
 @ApiTags('Articles')
 @Controller('article')
 export class ArticleController {
@@ -116,7 +119,7 @@ export class ArticleController {
   @ApiResponse({ status: 404, description: 'Article not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.articleService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.articleService.remove(id, req.user);
   }
 }

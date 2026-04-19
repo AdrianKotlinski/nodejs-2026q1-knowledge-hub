@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -25,6 +26,7 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
+@ApiBearerAuth()
 @ApiTags('Categories')
 @Controller('category')
 export class CategoryController {

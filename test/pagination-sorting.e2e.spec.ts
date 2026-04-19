@@ -1,6 +1,11 @@
 import { request } from './lib';
 import { StatusCodes } from 'http-status-codes';
 import { articlesRoutes } from './endpoints';
+import {
+  getTokenAndUserId,
+  shouldAuthorizationBeTested,
+  removeTokenUser,
+} from './utils';
 
 const makeArticle = (title: string) => ({
   title,
@@ -14,6 +19,24 @@ const makeArticle = (title: string) => ({
 describe('Pagination & Sorting (e2e)', () => {
   const commonHeaders = { Accept: 'application/json' };
   const createdIds: string[] = [];
+  let mockUserId: string | undefined;
+
+  beforeAll(async () => {
+    if (shouldAuthorizationBeTested) {
+      const result = await getTokenAndUserId(request);
+      commonHeaders['Authorization'] = result.token;
+      mockUserId = result.mockUserId;
+    }
+  });
+
+  afterAll(async () => {
+    for (const id of createdIds) {
+      await request.delete(articlesRoutes.delete(id)).set(commonHeaders);
+    }
+    if (mockUserId) {
+      await removeTokenUser(request, mockUserId, commonHeaders);
+    }
+  });
 
   const createArticle = async (title: string): Promise<string> => {
     const res = await request
@@ -24,12 +47,6 @@ describe('Pagination & Sorting (e2e)', () => {
     createdIds.push(res.body.id);
     return res.body.id;
   };
-
-  afterAll(async () => {
-    for (const id of createdIds) {
-      await request.delete(articlesRoutes.delete(id)).set(commonHeaders);
-    }
-  });
 
   describe('Pagination', () => {
     it('should return a paginated response shape when page and limit are provided', async () => {

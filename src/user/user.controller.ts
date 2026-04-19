@@ -17,6 +17,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -25,6 +26,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 
+@ApiBearerAuth()
 @ApiTags('Users')
 @Controller('user')
 export class UserController {
@@ -80,8 +82,8 @@ export class UserController {
     return this.userService.create(dto);
   }
 
-  @Roles(UserRole.ADMIN, UserRole.EDITOR)
-  @ApiOperation({ summary: "Update user's password" })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: "Update user's password or role" })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'Password updated' })
   @ApiResponse({ status: 400, description: 'Invalid UUID or body' })

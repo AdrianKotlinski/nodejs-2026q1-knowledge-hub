@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -12,7 +13,7 @@ import { RefreshDto } from './dto/refresh.dto';
 import { SignupDto } from './dto/signup.dto';
 
 interface JwtPayload {
-  sub: string;
+  userId: string;
   login: string;
   role: UserRole;
 }
@@ -27,9 +28,11 @@ export class AuthService {
   async signup(dto: SignupDto) {
     const existing = await this.userService.findByLogin(dto.login);
     if (existing) throw new BadRequestException('Login already taken');
+    const isFirstUser = (await this.userService.count()) === 0;
     return this.userService.create({
       login: dto.login,
       password: dto.password,
+      role: isFirstUser ? UserRole.ADMIN : UserRole.VIEWER,
     });
   }
 
@@ -41,19 +44,21 @@ export class AuthService {
     if (!isMatch) throw new ForbiddenException('Invalid credentials');
 
     return this.issueTokens({
-      sub: user.id,
+      userId: user.id,
       login: user.login,
       role: user.role as UserRole,
     });
   }
 
   refresh(dto: RefreshDto) {
+    if (!dto.refreshToken)
+      throw new UnauthorizedException('Refresh token is required');
     try {
       const payload = this.jwtService.verify<JwtPayload>(dto.refreshToken, {
         secret: process.env.JWT_SECRET_REFRESH_KEY,
       });
       return this.issueTokens({
-        sub: payload.sub,
+        userId: payload.userId,
         login: payload.login,
         role: payload.role,
       });
