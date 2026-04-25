@@ -54,7 +54,7 @@ export class ArticleController {
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page' })
   @ApiResponse({ status: 200, description: 'List of articles' })
   @Get()
-  findAll(
+  async findAll(
     @Query('status') status?: string,
     @Query('categoryId') categoryId?: string,
     @Query('tag') tag?: string,
@@ -63,7 +63,7 @@ export class ArticleController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    const items = this.articleService.findAll(status, categoryId, tag);
+    const items = await this.articleService.findAll(status, categoryId, tag);
     const sorted = sortItems(items, sortBy, order);
     return paginate(
       sorted,

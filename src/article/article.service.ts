@@ -1,74 +1,133 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { db, Article, ArticleStatus } from '../db/in-memory.store';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
+import { Article, Tag, ArticleStatus } from '../../generated/prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { ArticleStatus as ArticleStatusEnum } from '../common/enums';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
-const applyFilters = (
-  articles: Article[],
-  status?: string,
-  categoryId?: string,
-  tag?: string,
-): Article[] => {
-  return articles
-    .filter((a) => (status ? a.status === status : true))
-    .filter((a) => (categoryId ? a.categoryId === categoryId : true))
-    .filter((a) => (tag ? a.tags.includes(tag) : true));
-};
+type ArticleWithTags = Article & { tags: Tag[] };
 
-const definedEntries = (dto: UpdateArticleDto) =>
-  Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined));
+const toResponse = (article: ArticleWithTags) => ({
+  id: article.id,
+  title: article.title,
+  content: article.content,
+  status: article.status as unknown as ArticleStatusEnum,
+  authorId: article.authorId,
+  categoryId: article.categoryId,
+  tags: article.tags.map((t) => t.name),
+  createdAt: article.createdAt.getTime(),
+  updatedAt: article.updatedAt.getTime(),
+});
+
+const INCLUDE_TAGS = { tags: true } as const;
+
+const tagConnectOrCreate = (names: string[]) =>
+  names.map((name) => ({ where: { name }, create: { name } }));
 
 @Injectable()
 export class ArticleService {
-  findAll(status?: string, categoryId?: string, tag?: string): Article[] {
-    return applyFilters(
-      Array.from(db.articles.values()),
-      status,
-      categoryId,
-      tag,
-    );
-  }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findOne(id: string): Article {
-    const article = db.articles.get(id);
-    if (!article) throw new NotFoundException('Article not found');
-    return article;
-  }
-
-  create(dto: CreateArticleDto): Article {
-    const now = Date.now();
-    const article: Article = {
-      id: crypto.randomUUID(),
-      title: dto.title,
-      content: dto.content,
-      status: dto.status ?? ArticleStatus.DRAFT,
-      authorId: dto.authorId ?? null,
-      categoryId: dto.categoryId ?? null,
-      tags: dto.tags ?? [],
-      createdAt: now,
-      updatedAt: now,
-    };
-    db.articles.set(article.id, article);
-    return article;
-  }
-
-  update(id: string, dto: UpdateArticleDto): Article {
-    const article = db.articles.get(id);
-    if (!article) throw new NotFoundException('Article not found');
-    Object.assign(article, definedEntries(dto), { updatedAt: Date.now() });
-    return article;
-  }
-
-  remove(id: string): void {
-    const article = db.articles.get(id);
-    if (!article) throw new NotFoundException('Article not found');
-
-    db.comments.forEach((comment, commentId) => {
-      if (comment.articleId === id) {
-        db.comments.delete(commentId);
-      }
+  async findAll(status?: string, categoryId?: string, tag?: string) {
+    const articles = await this.prisma.article.findMany({
+      where: {
+        ...(status ? { status: status as ArticleStatus } : {}),
+        ...(categoryId ? { categoryId } : {}),
+        ...(tag ? { tags: { some: { name: tag } } } : {}),
+      },
+      include: INCLUDE_TAGS,
     });
+    return articles.map(toResponse);
+  }
 
-    db.articles.delete(id);
+  async findOne(id: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { id },
+      include: INCLUDE_TAGS,
+    });
+    if (!article) throw new NotFoundException('Article not found');
+    return toResponse(article);
+  }
+
+  async create(dto: CreateArticleDto) {
+    if (dto.authorId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.authorId },
+      });
+      if (!user) throw new UnprocessableEntityException('Author not found');
+    }
+    if (dto.categoryId) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category)
+        throw new UnprocessableEntityException('Category not found');
+    }
+
+    const article = await this.prisma.article.create({
+      data: {
+        title: dto.title,
+        content: dto.content,
+        status: (dto.status ??
+          ArticleStatusEnum.DRAFT) as unknown as ArticleStatus,
+        authorId: dto.authorId ?? null,
+        categoryId: dto.categoryId ?? null,
+        tags: { connectOrCreate: tagConnectOrCreate(dto.tags ?? []) },
+      },
+      include: INCLUDE_TAGS,
+    });
+    return toResponse(article);
+  }
+
+  async update(id: string, dto: UpdateArticleDto) {
+    const exists = await this.prisma.article.findUnique({ where: { id } });
+    if (!exists) throw new NotFoundException('Article not found');
+
+    if (dto.authorId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: dto.authorId },
+      });
+      if (!user) throw new UnprocessableEntityException('Author not found');
+    }
+    if (dto.categoryId) {
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+      });
+      if (!category)
+        throw new UnprocessableEntityException('Category not found');
+    }
+
+    const article = await this.prisma.article.update({
+      where: { id },
+      data: {
+        ...(dto.title !== undefined ? { title: dto.title } : {}),
+        ...(dto.content !== undefined ? { content: dto.content } : {}),
+        ...(dto.status !== undefined
+          ? { status: dto.status as unknown as ArticleStatus }
+          : {}),
+        ...(dto.authorId !== undefined ? { authorId: dto.authorId } : {}),
+        ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId } : {}),
+        ...(dto.tags !== undefined
+          ? {
+              tags: {
+                set: [],
+                connectOrCreate: tagConnectOrCreate(dto.tags),
+              },
+            }
+          : {}),
+      },
+      include: INCLUDE_TAGS,
+    });
+    return toResponse(article);
+  }
+
+  async remove(id: string) {
+    const exists = await this.prisma.article.findUnique({ where: { id } });
+    if (!exists) throw new NotFoundException('Article not found');
+    await this.prisma.article.delete({ where: { id } });
   }
 }

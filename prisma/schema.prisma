@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  editor
+  viewer
+}
+
+enum ArticleStatus {
+  draft
+  published
+  archived
+}
+
+model User {
+  id        String    @id @default(uuid())
+  login     String    @unique
+  password  String
+  role      UserRole  @default(viewer)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  articles  Article[]
+  comments  Comment[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String
+  description String
+
+  articles    Article[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id       String    @id @default(uuid())
+  name     String    @unique
+
+  articles Article[]
+
+  @@map("tags")
+}
+
+model Article {
+  id         String        @id @default(uuid())
+  title      String
+  content    String
+  status     ArticleStatus @default(draft)
+  authorId   String?
+  categoryId String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  author    User?     @relation(fields: [authorId],   references: [id], onDelete: SetNull)
+  category  Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags      Tag[]
+  comments  Comment[]
+
+  @@map("articles")
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  articleId String
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author  User?   @relation(fields: [authorId],  references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}

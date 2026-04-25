@@ -4,75 +4,65 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { db, User, UserRole } from '../db/in-memory.store';
+import { User } from '../../generated/prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserRole } from '../common/enums';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 
-const toResponse = (user: User): Omit<User, 'password'> => ({
+const toResponse = (user: User) => ({
   id: user.id,
   login: user.login,
-  role: user.role,
-  createdAt: user.createdAt,
-  updatedAt: user.updatedAt,
+  role: user.role as unknown as UserRole,
+  createdAt: user.createdAt.getTime(),
+  updatedAt: user.updatedAt.getTime(),
 });
 
 const getSaltRounds = () => parseInt(process.env.CRYPT_SALT ?? '10', 10);
 
 @Injectable()
 export class UserService {
-  findAll() {
-    return Array.from(db.users.values()).map(toResponse);
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll() {
+    const users = await this.prisma.user.findMany();
+    return users.map(toResponse);
   }
 
-  findOne(id: string) {
-    const user = db.users.get(id);
+  async findOne(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
     return toResponse(user);
   }
 
   async create(dto: CreateUserDto) {
-    const now = Date.now();
-    const user: User = {
-      id: crypto.randomUUID(),
-      login: dto.login,
-      password: await bcrypt.hash(dto.password, getSaltRounds()),
-      role: dto.role ?? UserRole.VIEWER,
-      createdAt: now,
-      updatedAt: now,
-    };
-    db.users.set(user.id, user);
+    const user = await this.prisma.user.create({
+      data: {
+        login: dto.login,
+        password: await bcrypt.hash(dto.password, getSaltRounds()),
+        role: (dto.role ?? UserRole.VIEWER) as unknown as any,
+      },
+    });
     return toResponse(user);
   }
 
   async updatePassword(id: string, dto: UpdatePasswordDto) {
-    const user = db.users.get(id);
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
     const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
     if (!isMatch) throw new ForbiddenException('Old password is incorrect');
 
-    user.password = await bcrypt.hash(dto.newPassword, getSaltRounds());
-    user.updatedAt = Date.now();
-    return toResponse(user);
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { password: await bcrypt.hash(dto.newPassword, getSaltRounds()) },
+    });
+    return toResponse(updated);
   }
 
-  remove(id: string) {
-    const user = db.users.get(id);
+  async remove(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
-
-    db.articles.forEach((article) => {
-      if (article.authorId === id) {
-        article.authorId = null;
-        article.updatedAt = Date.now();
-      }
-    });
-
-    db.comments.forEach((comment, commentId) => {
-      if (comment.authorId === id) {
-        db.comments.delete(commentId);
-      }
-    });
-
-    db.users.delete(id);
+    await this.prisma.user.delete({ where: { id } });
   }
 }
