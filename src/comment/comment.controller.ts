@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,11 +17,15 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
+@ApiBearerAuth()
 @ApiTags('Comments')
 @Controller('comment')
 export class CommentController {
@@ -68,6 +73,7 @@ export class CommentController {
     return this.commentService.findOne(id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Create a new comment' })
   @ApiResponse({ status: 201, description: 'Comment created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -78,6 +84,7 @@ export class CommentController {
     return this.commentService.create(dto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Delete a comment' })
   @ApiParam({ name: 'id', description: 'Comment UUID' })
   @ApiResponse({ status: 204, description: 'Comment deleted' })
@@ -85,7 +92,7 @@ export class CommentController {
   @ApiResponse({ status: 404, description: 'Comment not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.commentService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.commentService.remove(id, req.user);
   }
 }

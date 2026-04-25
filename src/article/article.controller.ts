@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,12 +18,16 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
+@ApiBearerAuth()
 @ApiTags('Articles')
 @Controller('article')
 export class ArticleController {
@@ -82,6 +87,7 @@ export class ArticleController {
     return this.articleService.findOne(id);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Create a new article' })
   @ApiResponse({ status: 201, description: 'Article created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -91,6 +97,7 @@ export class ArticleController {
     return this.articleService.create(dto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Update an article' })
   @ApiParam({ name: 'id', description: 'Article UUID' })
   @ApiResponse({ status: 200, description: 'Article updated' })
@@ -104,6 +111,7 @@ export class ArticleController {
     return this.articleService.update(id, dto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.EDITOR)
   @ApiOperation({ summary: 'Delete an article' })
   @ApiParam({ name: 'id', description: 'Article UUID' })
   @ApiResponse({ status: 204, description: 'Article deleted' })
@@ -111,7 +119,7 @@ export class ArticleController {
   @ApiResponse({ status: 404, description: 'Article not found' })
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.articleService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @Req() req: any) {
+    return this.articleService.remove(id, req.user);
   }
 }

@@ -12,6 +12,7 @@ async function bootstrap() {
     .setTitle('Knowledge Hub API')
     .setDescription('REST API for a Knowledge Hub platform')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('doc', app, document);

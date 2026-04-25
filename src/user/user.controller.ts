@@ -17,12 +17,16 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { sortItems, paginate } from '../common/list.helpers';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../common/enums';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 
+@ApiBearerAuth()
 @ApiTags('Users')
 @Controller('user')
 export class UserController {
@@ -68,6 +72,7 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
@@ -77,7 +82,8 @@ export class UserController {
     return this.userService.create(dto);
   }
 
-  @ApiOperation({ summary: "Update user's password" })
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: "Update user's password or role" })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 200, description: 'Password updated' })
   @ApiResponse({ status: 400, description: 'Invalid UUID or body' })
@@ -91,6 +97,7 @@ export class UserController {
     return this.userService.updatePassword(id, dto);
   }
 
+  @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Delete a user' })
   @ApiParam({ name: 'id', description: 'User UUID' })
   @ApiResponse({ status: 204, description: 'User deleted' })

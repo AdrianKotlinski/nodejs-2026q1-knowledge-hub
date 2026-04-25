@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import * as bcrypt from 'bcrypt';
 import { v5 as uuidv5 } from 'uuid';
 
 const SEED_NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
@@ -10,30 +9,8 @@ const id = (name: string) => uuidv5(name, SEED_NAMESPACE);
 const prisma = new (PrismaClient as any)({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 }) as PrismaClient;
-const SALT_ROUNDS = 10;
 
 async function main() {
-  // ── Users ──────────────────────────────────────────────────────────────────
-  const admin = await prisma.user.upsert({
-    where: { login: 'admin' },
-    update: {},
-    create: {
-      login: 'admin',
-      password: await bcrypt.hash('admin123', SALT_ROUNDS),
-      role: 'admin',
-    },
-  });
-
-  const editor = await prisma.user.upsert({
-    where: { login: 'editor' },
-    update: {},
-    create: {
-      login: 'editor',
-      password: await bcrypt.hash('editor123', SALT_ROUNDS),
-      role: 'editor',
-    },
-  });
-
   // ── Categories ─────────────────────────────────────────────────────────────
   const catTS = await prisma.category.upsert({
     where: { id: id('category-typescript') },
@@ -80,7 +57,7 @@ async function main() {
       title: 'Getting Started with NestJS',
       content: 'NestJS is a progressive Node.js framework for building efficient server-side applications.',
       status: 'published',
-      authorId: admin.id,
+      authorId: null,
       categoryId: catNest.id,
       tags: {
         connectOrCreate: [
@@ -100,7 +77,7 @@ async function main() {
       title: 'TypeScript Generics Deep Dive',
       content: 'Generics allow us to create reusable, type-safe components in TypeScript.',
       status: 'published',
-      authorId: editor.id,
+      authorId: null,
       categoryId: catTS.id,
       tags: {
         connectOrCreate: [
@@ -118,7 +95,7 @@ async function main() {
       title: 'Node.js Event Loop Explained',
       content: 'The event loop is what allows Node.js to perform non-blocking I/O operations.',
       status: 'draft',
-      authorId: editor.id,
+      authorId: null,
       categoryId: catNode.id,
       tags: {
         connectOrCreate: [
@@ -137,7 +114,7 @@ async function main() {
       title: 'Building REST APIs with NestJS',
       content: 'REST APIs are a common way to expose data and business logic to clients.',
       status: 'published',
-      authorId: admin.id,
+      authorId: null,
       categoryId: catNest.id,
       tags: {
         connectOrCreate: [
@@ -174,7 +151,7 @@ async function main() {
       id: id('comment-great-introduction'),
       content: 'Great introduction to NestJS!',
       articleId: article1Id,
-      authorId: editor.id,
+      authorId: null,
     },
   });
 
@@ -196,7 +173,7 @@ async function main() {
       id: id('comment-generics-helped'),
       content: 'This helped me understand generics much better.',
       articleId: article2Id,
-      authorId: admin.id,
+      authorId: null,
     },
   });
 

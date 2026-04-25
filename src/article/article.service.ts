@@ -1,8 +1,10 @@
 import {
+  ForbiddenException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { UserRole } from '../common/enums';
 import { Article, Tag, ArticleStatus } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { ArticleStatus as ArticleStatusEnum } from '../common/enums';
@@ -125,9 +127,15 @@ export class ArticleService {
     return toResponse(article);
   }
 
-  async remove(id: string) {
-    const exists = await this.prisma.article.findUnique({ where: { id } });
-    if (!exists) throw new NotFoundException('Article not found');
+  async remove(id: string, currentUser?: { userId: string; role: UserRole }) {
+    const article = await this.prisma.article.findUnique({ where: { id } });
+    if (!article) throw new NotFoundException('Article not found');
+    if (
+      currentUser?.role === UserRole.EDITOR &&
+      article.authorId !== currentUser.userId
+    ) {
+      throw new ForbiddenException('Not authorized to delete this article');
+    }
     await this.prisma.article.delete({ where: { id } });
   }
 }

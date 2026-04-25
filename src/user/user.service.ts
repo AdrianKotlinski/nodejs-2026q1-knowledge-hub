@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -36,28 +37,64 @@ export class UserService {
   }
 
   async create(dto: CreateUserDto) {
-    const user = await this.prisma.user.create({
-      data: {
-        login: dto.login,
-        password: await bcrypt.hash(dto.password, getSaltRounds()),
-        role: (dto.role ?? UserRole.VIEWER) as unknown as any,
-      },
-    });
-    return toResponse(user);
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          login: dto.login,
+          password: await bcrypt.hash(dto.password, getSaltRounds()),
+          role: (dto.role ?? UserRole.VIEWER) as unknown as any,
+        },
+      });
+      return toResponse(user);
+    } catch (err: any) {
+      if (err?.code === 'P2002')
+        throw new BadRequestException('Login already taken');
+      throw err;
+    }
   }
 
   async updatePassword(id: string, dto: UpdatePasswordDto) {
+    const hasRole = dto.role !== undefined;
+    const hasPassword =
+      dto.oldPassword !== undefined || dto.newPassword !== undefined;
+
+    if (!hasRole && !hasPassword)
+      throw new BadRequestException('No update fields provided');
+
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
-    const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
-    if (!isMatch) throw new ForbiddenException('Old password is incorrect');
+    const data: Record<string, any> = {};
 
-    const updated = await this.prisma.user.update({
-      where: { id },
-      data: { password: await bcrypt.hash(dto.newPassword, getSaltRounds()) },
-    });
+    if (hasRole) {
+      data.role = dto.role;
+    }
+
+    if (hasPassword) {
+      if (!dto.oldPassword || !dto.newPassword)
+        throw new BadRequestException(
+          'oldPassword and newPassword are required',
+        );
+      const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
+      if (!isMatch) throw new ForbiddenException('Old password is incorrect');
+      data.password = await bcrypt.hash(dto.newPassword, getSaltRounds());
+    }
+
+    const updated = await this.prisma.user.update({ where: { id }, data });
     return toResponse(updated);
+  }
+
+  async findByLogin(login: string) {
+    const user = await this.prisma.user.findUnique({ where: { login } });
+    return user ? toResponse(user) : null;
+  }
+
+  async findByLoginWithPassword(login: string) {
+    return this.prisma.user.findUnique({ where: { login } });
+  }
+
+  async count() {
+    return this.prisma.user.count();
   }
 
   async remove(id: string) {
