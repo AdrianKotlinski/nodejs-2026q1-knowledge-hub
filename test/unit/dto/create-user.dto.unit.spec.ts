@@ -5,12 +5,19 @@ import { CreateUserDto } from '../../../src/user/dto/create-user.dto';
 
 describe('CreateUserDto', () => {
   it('passes with login and password', async () => {
-    const dto = plainToInstance(CreateUserDto, { login: 'alice', password: 'pw' });
+    const dto = plainToInstance(CreateUserDto, {
+      login: 'alice',
+      password: 'pw',
+    });
     expect(await validate(dto)).toHaveLength(0);
   });
 
   it('passes with valid role', async () => {
-    const dto = plainToInstance(CreateUserDto, { login: 'alice', password: 'pw', role: 'admin' });
+    const dto = plainToInstance(CreateUserDto, {
+      login: 'alice',
+      password: 'pw',
+      role: 'admin',
+    });
     expect(await validate(dto)).toHaveLength(0);
   });
 
@@ -27,7 +34,11 @@ describe('CreateUserDto', () => {
   });
 
   it('fails when role is an invalid enum value', async () => {
-    const dto = plainToInstance(CreateUserDto, { login: 'alice', password: 'pw', role: 'superuser' });
+    const dto = plainToInstance(CreateUserDto, {
+      login: 'alice',
+      password: 'pw',
+      role: 'superuser',
+    });
     const errors = await validate(dto);
     expect(errors.some((e) => e.property === 'role')).toBe(true);
   });

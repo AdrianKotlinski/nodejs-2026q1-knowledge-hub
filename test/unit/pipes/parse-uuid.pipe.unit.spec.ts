@@ -16,7 +16,9 @@ describe('ParseUUIDPipe', () => {
   });
 
   it('throws BadRequestException for a plain string', async () => {
-    await expect(pipe.transform('abc', META)).rejects.toThrow(BadRequestException);
+    await expect(pipe.transform('abc', META)).rejects.toThrow(
+      BadRequestException,
+    );
   });
 
   it('throws BadRequestException for an empty string', async () => {

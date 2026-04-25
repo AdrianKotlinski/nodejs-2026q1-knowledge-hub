@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -26,6 +27,12 @@ const toResponse = (article: ArticleWithTags) => ({
 });
 
 const INCLUDE_TAGS = { tags: true } as const;
+
+const VALID_TRANSITIONS: Partial<Record<string, string[]>> = {
+  draft: ['published'],
+  published: ['archived'],
+  archived: [],
+};
 
 const tagConnectOrCreate = (names: string[]) =>
   names.map((name) => ({ where: { name }, create: { name } }));
@@ -88,6 +95,16 @@ export class ArticleService {
   async update(id: string, dto: UpdateArticleDto) {
     const exists = await this.prisma.article.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('Article not found');
+
+    if (dto.status && dto.status !== (exists.status as unknown as string)) {
+      const allowed =
+        VALID_TRANSITIONS[exists.status as unknown as string] ?? [];
+      if (!allowed.includes(dto.status as string)) {
+        throw new BadRequestException(
+          `Cannot transition from ${exists.status} to ${dto.status}`,
+        );
+      }
+    }
 
     if (dto.authorId) {
       const user = await this.prisma.user.findUnique({

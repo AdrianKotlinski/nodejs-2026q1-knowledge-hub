@@ -1,6 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../../../src/user/user.service';
 import { PrismaService } from '../../../src/prisma/prisma.service';
@@ -63,7 +67,9 @@ describe('UserService', () => {
 
     it('throws NotFoundException when user does not exist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
-      await expect(service.findOne('missing-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -87,37 +93,50 @@ describe('UserService', () => {
       mockPrisma.user.create.mockResolvedValue(makeDbUser());
       await service.create({ login: 'alice', password: 'pw' });
       expect(mockPrisma.user.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ role: UserRole.VIEWER }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ role: UserRole.VIEWER }),
+        }),
       );
     });
 
     it('assigns the provided role when specified', async () => {
       vi.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
       mockPrisma.user.create.mockResolvedValue(makeDbUser({ role: 'admin' }));
-      await service.create({ login: 'alice', password: 'pw', role: UserRole.ADMIN });
+      await service.create({
+        login: 'alice',
+        password: 'pw',
+        role: UserRole.ADMIN,
+      });
       expect(mockPrisma.user.create).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ role: UserRole.ADMIN }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ role: UserRole.ADMIN }),
+        }),
       );
     });
 
     it('throws BadRequestException on duplicate login (P2002)', async () => {
       vi.mocked(bcrypt.hash).mockResolvedValue('hashed' as never);
       mockPrisma.user.create.mockRejectedValue({ code: 'P2002' });
-      await expect(service.create({ login: 'alice', password: 'pw' })).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.create({ login: 'alice', password: 'pw' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('updatePassword', () => {
     it('throws BadRequestException when no fields are provided', async () => {
-      await expect(service.updatePassword('user-uuid-1', {})).rejects.toThrow(BadRequestException);
+      await expect(service.updatePassword('user-uuid-1', {})).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('throws NotFoundException when user does not exist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
       await expect(
-        service.updatePassword('missing', { oldPassword: 'old', newPassword: 'new' }),
+        service.updatePassword('missing', {
+          oldPassword: 'old',
+          newPassword: 'new',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -126,7 +145,9 @@ describe('UserService', () => {
       mockPrisma.user.update.mockResolvedValue(makeDbUser({ role: 'editor' }));
       await service.updatePassword('user-uuid-1', { role: UserRole.EDITOR });
       expect(mockPrisma.user.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ role: UserRole.EDITOR }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ role: UserRole.EDITOR }),
+        }),
       );
       expect(bcrypt.compare).not.toHaveBeenCalled();
     });
@@ -142,7 +163,10 @@ describe('UserService', () => {
       mockPrisma.user.findUnique.mockResolvedValue(makeDbUser());
       vi.mocked(bcrypt.compare).mockResolvedValue(false as never);
       await expect(
-        service.updatePassword('user-uuid-1', { oldPassword: 'wrong', newPassword: 'new' }),
+        service.updatePassword('user-uuid-1', {
+          oldPassword: 'wrong',
+          newPassword: 'new',
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -151,10 +175,15 @@ describe('UserService', () => {
       vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
       vi.mocked(bcrypt.hash).mockResolvedValue('new_hashed' as never);
       mockPrisma.user.update.mockResolvedValue(makeDbUser());
-      await service.updatePassword('user-uuid-1', { oldPassword: 'correct', newPassword: 'new' });
+      await service.updatePassword('user-uuid-1', {
+        oldPassword: 'correct',
+        newPassword: 'new',
+      });
       expect(bcrypt.hash).toHaveBeenCalledWith('new', expect.any(Number));
       expect(mockPrisma.user.update).toHaveBeenCalledWith(
-        expect.objectContaining({ data: expect.objectContaining({ password: 'new_hashed' }) }),
+        expect.objectContaining({
+          data: expect.objectContaining({ password: 'new_hashed' }),
+        }),
       );
     });
   });
@@ -162,14 +191,18 @@ describe('UserService', () => {
   describe('remove', () => {
     it('throws NotFoundException when user does not exist', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
-      await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('missing')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('calls prisma delete when user exists', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(makeDbUser());
       mockPrisma.user.delete.mockResolvedValue(makeDbUser());
       await service.remove('user-uuid-1');
-      expect(mockPrisma.user.delete).toHaveBeenCalledWith({ where: { id: 'user-uuid-1' } });
+      expect(mockPrisma.user.delete).toHaveBeenCalledWith({
+        where: { id: 'user-uuid-1' },
+      });
     });
   });
 });

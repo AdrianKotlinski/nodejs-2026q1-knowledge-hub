@@ -5,7 +5,10 @@ import { CreateCategoryDto } from '../../../src/category/dto/create-category.dto
 
 describe('CreateCategoryDto', () => {
   it('passes with name and description', async () => {
-    const dto = plainToInstance(CreateCategoryDto, { name: 'TS', description: 'TypeScript articles' });
+    const dto = plainToInstance(CreateCategoryDto, {
+      name: 'TS',
+      description: 'TypeScript articles',
+    });
     expect(await validate(dto)).toHaveLength(0);
   });
 

@@ -32,7 +32,11 @@ describe('CreateArticleDto', () => {
   });
 
   it('fails when status is an invalid enum value', async () => {
-    const dto = plainToInstance(CreateArticleDto, { title: 'T', content: 'C', status: 'deleted' });
+    const dto = plainToInstance(CreateArticleDto, {
+      title: 'T',
+      content: 'C',
+      status: 'deleted',
+    });
     const errors = await validate(dto);
     expect(errors.some((e) => e.property === 'status')).toBe(true);
   });
