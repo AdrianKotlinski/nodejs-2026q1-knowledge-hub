@@ -2,6 +2,7 @@
   "moduleFileExtensions": ["ts", "js"],
   "rootDir": "test",
   "testEnvironment": "node",
+  "testPathIgnorePatterns": ["test/unit/"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   }

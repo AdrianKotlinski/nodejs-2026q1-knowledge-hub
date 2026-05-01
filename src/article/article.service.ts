@@ -1,9 +1,5 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '../common/errors';
 import { UserRole } from '../common/enums';
 import { Article, Tag, ArticleStatus } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -26,6 +22,12 @@ const toResponse = (article: ArticleWithTags) => ({
 });
 
 const INCLUDE_TAGS = { tags: true } as const;
+
+const VALID_TRANSITIONS: Partial<Record<string, string[]>> = {
+  draft: ['published'],
+  published: ['archived'],
+  archived: [],
+};
 
 const tagConnectOrCreate = (names: string[]) =>
   names.map((name) => ({ where: { name }, create: { name } }));
@@ -51,7 +53,7 @@ export class ArticleService {
       where: { id },
       include: INCLUDE_TAGS,
     });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article) throw new NotFoundError('Article not found');
     return toResponse(article);
   }
 
@@ -87,7 +89,17 @@ export class ArticleService {
 
   async update(id: string, dto: UpdateArticleDto) {
     const exists = await this.prisma.article.findUnique({ where: { id } });
-    if (!exists) throw new NotFoundException('Article not found');
+    if (!exists) throw new NotFoundError('Article not found');
+
+    if (dto.status && dto.status !== (exists.status as unknown as string)) {
+      const allowed =
+        VALID_TRANSITIONS[exists.status as unknown as string] ?? [];
+      if (!allowed.includes(dto.status as string)) {
+        throw new ValidationError(
+          `Cannot transition from ${exists.status} to ${dto.status}`,
+        );
+      }
+    }
 
     if (dto.authorId) {
       const user = await this.prisma.user.findUnique({
@@ -129,12 +141,12 @@ export class ArticleService {
 
   async remove(id: string, currentUser?: { userId: string; role: UserRole }) {
     const article = await this.prisma.article.findUnique({ where: { id } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article) throw new NotFoundError('Article not found');
     if (
       currentUser?.role === UserRole.EDITOR &&
       article.authorId !== currentUser.userId
     ) {
-      throw new ForbiddenException('Not authorized to delete this article');
+      throw new ForbiddenError('Not authorized to delete this article');
     }
     await this.prisma.article.delete({ where: { id } });
   }

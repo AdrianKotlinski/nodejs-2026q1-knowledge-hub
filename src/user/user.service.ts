@@ -1,9 +1,5 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { NotFoundError, ValidationError, ForbiddenError } from '../common/errors';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -32,7 +28,7 @@ export class UserService {
 
   async findOne(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundError('User not found');
     return toResponse(user);
   }
 
@@ -48,7 +44,7 @@ export class UserService {
       return toResponse(user);
     } catch (err: any) {
       if (err?.code === 'P2002')
-        throw new BadRequestException('Login already taken');
+        throw new ValidationError('Login already taken');
       throw err;
     }
   }
@@ -59,10 +55,10 @@ export class UserService {
       dto.oldPassword !== undefined || dto.newPassword !== undefined;
 
     if (!hasRole && !hasPassword)
-      throw new BadRequestException('No update fields provided');
+      throw new ValidationError('No update fields provided');
 
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundError('User not found');
 
     const data: Record<string, any> = {};
 
@@ -72,11 +68,9 @@ export class UserService {
 
     if (hasPassword) {
       if (!dto.oldPassword || !dto.newPassword)
-        throw new BadRequestException(
-          'oldPassword and newPassword are required',
-        );
+        throw new ValidationError('oldPassword and newPassword are required');
       const isMatch = await bcrypt.compare(dto.oldPassword, user.password);
-      if (!isMatch) throw new ForbiddenException('Old password is incorrect');
+      if (!isMatch) throw new ForbiddenError('Old password is incorrect');
       data.password = await bcrypt.hash(dto.newPassword, getSaltRounds());
     }
 
@@ -99,7 +93,7 @@ export class UserService {
 
   async remove(id: string) {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundError('User not found');
     await this.prisma.user.delete({ where: { id } });
   }
 }

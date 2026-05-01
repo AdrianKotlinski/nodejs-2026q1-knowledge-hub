@@ -1,9 +1,5 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { NotFoundError, ForbiddenError } from '../common/errors';
 import { UserRole } from '../common/enums';
 import { Comment } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -30,7 +26,7 @@ export class CommentService {
 
   async findOne(id: string) {
     const comment = await this.prisma.comment.findUnique({ where: { id } });
-    if (!comment) throw new NotFoundException('Comment not found');
+    if (!comment) throw new NotFoundError('Comment not found');
     return toResponse(comment);
   }
 
@@ -53,12 +49,12 @@ export class CommentService {
 
   async remove(id: string, currentUser?: { userId: string; role: UserRole }) {
     const comment = await this.prisma.comment.findUnique({ where: { id } });
-    if (!comment) throw new NotFoundException('Comment not found');
+    if (!comment) throw new NotFoundError('Comment not found');
     if (
       currentUser?.role === UserRole.EDITOR &&
       comment.authorId !== currentUser.userId
     ) {
-      throw new ForbiddenException('Not authorized to delete this comment');
+      throw new ForbiddenError('Not authorized to delete this comment');
     }
     await this.prisma.comment.delete({ where: { id } });
   }
