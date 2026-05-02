@@ -1,4 +1,10 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+  Logger,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request, Response } from 'express';
@@ -8,7 +14,8 @@ function sanitize(obj: unknown): unknown {
   return Object.fromEntries(
     Object.entries(obj as Record<string, unknown>).map(([k, v]) => {
       const lower = k.toLowerCase();
-      if (lower === 'password' || lower.includes('token')) return [k, '[REDACTED]'];
+      if (lower === 'password' || lower.includes('token'))
+        return [k, '[REDACTED]'];
       return [k, v];
     }),
   );
@@ -30,7 +37,9 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const res = context.switchToHttp().getResponse<Response>();
-        this.logger.log(`← ${method} ${url} | ${res.statusCode} | ${Date.now() - start}ms`);
+        this.logger.log(
+          `← ${method} ${url} | ${res.statusCode} | ${Date.now() - start}ms`,
+        );
       }),
     );
   }

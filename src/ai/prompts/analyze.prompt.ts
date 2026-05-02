@@ -1,10 +1,14 @@
 import { AnalysisTask } from '../dto/analyze-article.dto';
 
 const TASK_INSTRUCTIONS: Record<AnalysisTask, string> = {
-  [AnalysisTask.REVIEW]: 'Review the following article for quality, clarity, and completeness.',
-  [AnalysisTask.BUGS]: 'Identify any factual errors, inconsistencies, or logical issues in the following article.',
-  [AnalysisTask.OPTIMIZE]: 'Suggest improvements to make the following article more engaging and effective.',
-  [AnalysisTask.EXPLAIN]: 'Explain the main concepts in the following article in simple terms.',
+  [AnalysisTask.REVIEW]:
+    'Review the following article for quality, clarity, and completeness.',
+  [AnalysisTask.BUGS]:
+    'Identify any factual errors, inconsistencies, or logical issues in the following article.',
+  [AnalysisTask.OPTIMIZE]:
+    'Suggest improvements to make the following article more engaging and effective.',
+  [AnalysisTask.EXPLAIN]:
+    'Explain the main concepts in the following article in simple terms.',
 };
 
 export function buildAnalyzePrompt(

@@ -31,7 +31,10 @@ export class AiObservabilityService {
     else m.cacheMisses++;
   }
 
-  getDiagnostics(): Record<string, EndpointMetrics & { cacheHitRatio: string }> {
+  getDiagnostics(): Record<
+    string,
+    EndpointMetrics & { cacheHitRatio: string }
+  > {
     return Object.fromEntries(
       Object.entries(this.metrics).map(([k, v]) => [
         k,

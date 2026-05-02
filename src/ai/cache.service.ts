@@ -8,7 +8,8 @@ interface CacheEntry<T> {
 @Injectable()
 export class AiCacheService {
   private readonly store = new Map<string, CacheEntry<unknown>>();
-  private readonly ttlMs = parseInt(process.env.AI_CACHE_TTL_SEC ?? '300', 10) * 1000;
+  private readonly ttlMs =
+    parseInt(process.env.AI_CACHE_TTL_SEC ?? '300', 10) * 1000;
 
   get<T>(key: string): T | null {
     const entry = this.store.get(key);

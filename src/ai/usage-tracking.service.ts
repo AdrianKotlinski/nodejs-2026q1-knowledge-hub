@@ -23,7 +23,11 @@ export class AiUsageTrackingService {
 
   record(
     endpoint: string,
-    tokens: { promptTokens: number; completionTokens: number; totalTokens: number },
+    tokens: {
+      promptTokens: number;
+      completionTokens: number;
+      totalTokens: number;
+    },
   ): void {
     this.stats.totalRequests++;
     this.stats.totalTokens += tokens.totalTokens;

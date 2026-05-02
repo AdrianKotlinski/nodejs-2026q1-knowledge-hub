@@ -36,7 +36,10 @@ export class AiSessionService {
     }
   }
 
-  buildContextualPrompt(history: ConversationTurn[], newPrompt: string): string {
+  buildContextualPrompt(
+    history: ConversationTurn[],
+    newPrompt: string,
+  ): string {
     const contextLines = history.map(
       (t) => `${t.role === 'user' ? 'User' : 'Assistant'}: ${t.text}`,
     );

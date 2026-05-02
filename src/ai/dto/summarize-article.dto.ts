@@ -8,7 +8,10 @@ export enum SummaryMaxLength {
 }
 
 export class SummarizeArticleDto {
-  @ApiPropertyOptional({ enum: SummaryMaxLength, default: SummaryMaxLength.MEDIUM })
+  @ApiPropertyOptional({
+    enum: SummaryMaxLength,
+    default: SummaryMaxLength.MEDIUM,
+  })
   @IsOptional()
   @IsEnum(SummaryMaxLength)
   maxLength?: SummaryMaxLength = SummaryMaxLength.MEDIUM;

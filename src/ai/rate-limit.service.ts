@@ -21,7 +21,9 @@ export class AiRateLimitService {
     }
 
     if (entry.count >= this.rpm) {
-      const retryAfter = Math.ceil((this.windowMs - (now - entry.windowStart)) / 1000);
+      const retryAfter = Math.ceil(
+        (this.windowMs - (now - entry.windowStart)) / 1000,
+      );
       throw new HttpException(
         { message: 'Rate limit exceeded', retryAfter },
         HttpStatus.TOO_MANY_REQUESTS,

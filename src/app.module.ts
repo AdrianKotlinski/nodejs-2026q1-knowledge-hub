@@ -11,6 +11,7 @@ import { CategoryModule } from './category/category.module';
 import { CommentModule } from './comment/comment.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   controllers: [AppController],
@@ -27,6 +28,7 @@ import { UserModule } from './user/user.module';
     CategoryModule,
     ArticleModule,
     CommentModule,
+    AiModule,
   ],
 })
 export class AppModule {}

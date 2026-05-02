@@ -14,13 +14,17 @@ describe('createFileWriter', () => {
   });
 
   it('creates the log directory on initialisation', () => {
-    vi.mocked(fs.statSync).mockImplementation(() => { throw new Error('ENOENT'); });
+    vi.mocked(fs.statSync).mockImplementation(() => {
+      throw new Error('ENOENT');
+    });
     createFileWriter('logs/app.log', 1024);
     expect(fs.mkdirSync).toHaveBeenCalledWith('logs', { recursive: true });
   });
 
   it('appends a JSON line with timestamp on write', () => {
-    vi.mocked(fs.statSync).mockImplementation(() => { throw new Error('ENOENT'); });
+    vi.mocked(fs.statSync).mockImplementation(() => {
+      throw new Error('ENOENT');
+    });
     const write = createFileWriter('logs/app.log', 1024);
     write({ level: 'log', message: 'hello' });
     const written = vi.mocked(fs.appendFileSync).mock.calls[0][1] as string;

@@ -1,8 +1,17 @@
-import { Injectable, Logger, InternalServerErrorException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  InternalServerErrorException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 interface GeminiResponse {
   candidates: { content: { parts: { text: string }[] } }[];
-  usageMetadata?: { promptTokenCount: number; candidatesTokenCount: number; totalTokenCount: number };
+  usageMetadata?: {
+    promptTokenCount: number;
+    candidatesTokenCount: number;
+    totalTokenCount: number;
+  };
 }
 
 export interface GeminiResult {
@@ -16,7 +25,9 @@ export interface GeminiResult {
 export class GeminiService {
   private readonly logger = new Logger(GeminiService.name);
   private readonly apiKey = process.env.GEMINI_API_KEY;
-  private readonly baseUrl = process.env.GEMINI_API_BASE_URL ?? 'https://generativelanguage.googleapis.com';
+  private readonly baseUrl =
+    process.env.GEMINI_API_BASE_URL ??
+    'https://generativelanguage.googleapis.com';
   private readonly model = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
 
   async generate(prompt: string, attempt = 0): Promise<GeminiResult> {
@@ -32,12 +43,16 @@ export class GeminiService {
       });
     } catch (err) {
       const isTimeout = err instanceof Error && err.name === 'TimeoutError';
-      this.logger.error(`Gemini request failed: ${isTimeout ? 'timeout' : 'network error'}`);
+      this.logger.error(
+        `Gemini request failed: ${isTimeout ? 'timeout' : 'network error'}`,
+      );
       if (attempt < 3) {
         await this.backoff(attempt);
         return this.generate(prompt, attempt + 1);
       }
-      throw new ServiceUnavailableException('AI service temporarily unavailable');
+      throw new ServiceUnavailableException(
+        'AI service temporarily unavailable',
+      );
     }
 
     if (response.status === 429) {
@@ -59,7 +74,9 @@ export class GeminiService {
         await this.backoff(attempt);
         return this.generate(prompt, attempt + 1);
       }
-      throw new ServiceUnavailableException('AI service temporarily unavailable');
+      throw new ServiceUnavailableException(
+        'AI service temporarily unavailable',
+      );
     }
 
     const data = (await response.json()) as GeminiResponse;
@@ -75,6 +92,8 @@ export class GeminiService {
   }
 
   private backoff(attempt: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, Math.pow(2, attempt) * 500));
+    return new Promise((resolve) =>
+      setTimeout(resolve, Math.pow(2, attempt) * 500),
+    );
   }
 }
