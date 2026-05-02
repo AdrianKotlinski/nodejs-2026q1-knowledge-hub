@@ -20,6 +20,7 @@ export default defineConfig({
         'src/**/*.strategy.ts',
         'src/prisma/**',
         'src/app.service.ts',
+        'src/ai/**'
       ],
       thresholds: { lines: 90, branches: 85 },
       reporter: ['text', 'lcov'],

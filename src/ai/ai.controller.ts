@@ -241,12 +241,29 @@ export class AiController {
     }
 
     const start = Date.now();
-    let prompt = dto.prompt;
+    const history = dto.sessionId
+      ? this.session.getHistory(dto.sessionId)
+      : [];
+    const cacheKey = this.cache.buildKey(
+      'generate',
+      dto.prompt,
+      dto.sessionId ?? '',
+      history.length,
+    );
 
-    if (dto.sessionId) {
-      const history = this.session.getHistory(dto.sessionId);
-      prompt = this.session.buildContextualPrompt(history, dto.prompt);
+    const cached = this.cache.get<{ text: string }>(cacheKey);
+    if (cached) {
+      this.observability.recordRequest('generate', Date.now() - start, true);
+      return res.json({
+        text: cached.text,
+        sessionId: dto.sessionId,
+        cached: true,
+      });
     }
+
+    const prompt = dto.sessionId
+      ? this.session.buildContextualPrompt(history, dto.prompt)
+      : dto.prompt;
 
     const result = await this.gemini.generate(prompt);
     const latencyMs = Date.now() - start;
@@ -258,10 +275,12 @@ export class AiController {
 
     this.usage.record('generate', result);
     this.observability.recordRequest('generate', latencyMs, false);
+    this.cache.set(cacheKey, { text: result.text });
 
     return res.json({
       text: result.text,
       sessionId: dto.sessionId,
+      cached: false,
       tokens: {
         prompt: result.promptTokens,
         completion: result.completionTokens,
