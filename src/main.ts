@@ -15,7 +15,10 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalFilters(new AllExceptionsFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor(), new ExcludePasswordInterceptor());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new ExcludePasswordInterceptor(),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Knowledge Hub API')
