@@ -12,6 +12,7 @@ import { CommentModule } from './comment/comment.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AiModule } from './ai/ai.module';
+import { RagModule } from './rag/rag.module';
 
 @Module({
   controllers: [AppController],
@@ -29,6 +30,7 @@ import { AiModule } from './ai/ai.module';
     ArticleModule,
     CommentModule,
     AiModule,
+    RagModule,
   ],
 })
 export class AppModule {}
