@@ -47,22 +47,32 @@ export class VectorStoreService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    try {
-      const { collections } = await this.client.getCollections();
-      const exists = collections.some((c) => c.name === this.collection);
-      if (!exists) {
-        await this.client.createCollection(this.collection, {
-          vectors: { size: 768, distance: 'Cosine' },
-        });
-        this.logger.log(`Created Qdrant collection: ${this.collection}`);
-      } else {
-        this.logger.log(`Qdrant collection ready: ${this.collection}`);
+    const maxAttempts = 10;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const { collections } = await this.client.getCollections();
+        const exists = collections.some((c) => c.name === this.collection);
+        if (!exists) {
+          await this.client.createCollection(this.collection, {
+            vectors: { size: 768, distance: 'Cosine' },
+          });
+          this.logger.log(`Created Qdrant collection: ${this.collection}`);
+        } else {
+          this.logger.log(`Qdrant collection ready: ${this.collection}`);
+        }
+        return;
+      } catch (err) {
+        if (attempt === maxAttempts) {
+          this.logger.error(
+            `Failed to connect to vector database after ${maxAttempts} attempts`,
+          );
+          throw new ServiceUnavailableException('Vector database unavailable');
+        }
+        this.logger.warn(
+          `Qdrant not ready, retrying (${attempt}/${maxAttempts})...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 2000 * attempt));
       }
-    } catch (err) {
-      this.logger.error(
-        `Failed to connect to vector database: ${(err as Error).message}`,
-      );
-      throw new ServiceUnavailableException('Vector database unavailable');
     }
   }
 
