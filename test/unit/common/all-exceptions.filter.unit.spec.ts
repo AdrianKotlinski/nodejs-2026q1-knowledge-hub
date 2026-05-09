@@ -1,8 +1,16 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { ArgumentsHost, BadRequestException, HttpException, NotFoundException } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  BadRequestException,
+  HttpException,
+  NotFoundException,
+} from '@nestjs/common';
 import { AllExceptionsFilter } from '../../../src/common/filters/all-exceptions.filter';
 
-function makeHost(status: ReturnType<typeof vi.fn>, json: ReturnType<typeof vi.fn>) {
+function makeHost(
+  status: ReturnType<typeof vi.fn>,
+  json: ReturnType<typeof vi.fn>,
+) {
   return {
     switchToHttp: () => ({
       getResponse: () => ({ status, json }),
@@ -25,11 +33,17 @@ describe('AllExceptionsFilter', () => {
   it('handles HttpException with string message', () => {
     filter.catch(new NotFoundException('not found'), makeHost(status, json));
     expect(status).toHaveBeenCalledWith(404);
-    expect(json).toHaveBeenCalledWith({ statusCode: 404, message: 'not found' });
+    expect(json).toHaveBeenCalledWith({
+      statusCode: 404,
+      message: 'not found',
+    });
   });
 
   it('handles HttpException with array message', () => {
-    const err = new BadRequestException(['field is required', 'must be string']);
+    const err = new BadRequestException([
+      'field is required',
+      'must be string',
+    ]);
     filter.catch(err, makeHost(status, json));
     expect(status).toHaveBeenCalledWith(400);
     expect(json).toHaveBeenCalledWith(
@@ -41,7 +55,10 @@ describe('AllExceptionsFilter', () => {
     const err = new HttpException({ message: 'custom message' }, 422);
     filter.catch(err, makeHost(status, json));
     expect(status).toHaveBeenCalledWith(422);
-    expect(json).toHaveBeenCalledWith({ statusCode: 422, message: 'custom message' });
+    expect(json).toHaveBeenCalledWith({
+      statusCode: 422,
+      message: 'custom message',
+    });
   });
 
   it('returns 500 for unknown errors', () => {

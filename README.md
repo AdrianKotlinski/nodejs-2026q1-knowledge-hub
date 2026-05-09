@@ -93,6 +93,21 @@ npx prisma migrate dev --name init (or npm run db:migrate)
 npx prisma db seed (or npm run db:seed)
 ```
 
+## AI / Gemini Setup
+
+The AI endpoints require a Google Gemini API key.
+
+1. Get a free API key at [Google AI Studio](https://aistudio.google.com/apikey).
+2. Open your `.env` file and set:
+
+```env
+GEMINI_API_KEY=your-api-key-here
+GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
+GEMINI_MODEL=gemini-2.5-flash
+AI_RATE_LIMIT_RPM=20
+AI_CACHE_TTL_SEC=300
+```
+
 ## Swagger UI
 
 Interactive API docs available at **http://localhost:4000/doc/** once the server is running.
@@ -150,6 +165,19 @@ When `page` and `limit` are provided, response shape is:
 ```json
 { "total": 42, "page": 1, "limit": 10, "data": [...] }
 ```
+
+### AI Endpoints `/ai`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/ai/articles/:id/summarize` | Summarize an article (`?maxLength=short\|medium\|detailed`) |
+| POST | `/ai/articles/:id/translate` | Translate an article (`targetLanguage` required in body) |
+| POST | `/ai/articles/:id/analyze` | Analyze an article (`task=review\|bugs\|optimize\|explain`) |
+| POST | `/ai/generate` | Generic prompt with optional session context (`sessionId`) |
+| GET | `/ai/usage` | Token usage stats per endpoint |
+| GET | `/ai/diagnostics` | Latency and cache-hit metrics |
+
+All AI routes require a valid JWT `Authorization: Bearer <token>` header. Requests are rate-limited to `AI_RATE_LIMIT_RPM` per minute per IP; the response includes a `Retry-After` header when the limit is exceeded.
 
 ## Testing
 

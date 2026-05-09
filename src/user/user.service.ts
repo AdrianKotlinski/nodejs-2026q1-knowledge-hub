@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { NotFoundError, ValidationError, ForbiddenError } from '../common/errors';
+import {
+  NotFoundError,
+  ValidationError,
+  ForbiddenError,
+} from '../common/errors';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
