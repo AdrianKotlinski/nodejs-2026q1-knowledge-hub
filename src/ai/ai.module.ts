@@ -19,5 +19,6 @@ import { ArticleModule } from '../article/article.module';
     AiObservabilityService,
     AiSessionService,
   ],
+  exports: [GeminiService],
 })
 export class AiModule {}

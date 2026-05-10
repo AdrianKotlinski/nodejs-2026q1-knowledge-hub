@@ -93,21 +93,6 @@ npx prisma migrate dev --name init (or npm run db:migrate)
 npx prisma db seed (or npm run db:seed)
 ```
 
-## AI / Gemini Setup
-
-The AI endpoints require a Google Gemini API key.
-
-1. Get a free API key at [Google AI Studio](https://aistudio.google.com/apikey).
-2. Open your `.env` file and set:
-
-```env
-GEMINI_API_KEY=your-api-key-here
-GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
-GEMINI_MODEL=gemini-2.5-flash
-AI_RATE_LIMIT_RPM=20
-AI_CACHE_TTL_SEC=300
-```
-
 ## Swagger UI
 
 Interactive API docs available at **http://localhost:4000/doc/** once the server is running.
@@ -194,3 +179,104 @@ npm run test -- test/users.e2e.spec.ts
 npm run lint
 npm run format
 ```
+
+---
+
+## AI & RAG — Retrieval-Augmented Generation
+
+The Knowledge Hub API includes a RAG layer that answers questions using article content stored in the database.
+
+## AI / Gemini Setup
+
+The AI endpoints require a Google Gemini API key.
+
+1. Get a free API key at [Google AI Studio](https://aistudio.google.com/apikey).
+2. Open your `.env` file and set:
+
+```env
+GEMINI_API_KEY=your-api-key-here
+GEMINI_API_BASE_URL=https://generativelanguage.googleapis.com
+GEMINI_MODEL=gemini-2.5-flash
+AI_RATE_LIMIT_RPM=20
+AI_CACHE_TTL_SEC=300
+```
+
+**Models used:**
+- Generation: `gemini-2.5-flash` (configured via `GEMINI_MODEL`)
+- Embeddings: `text-embedding-004` — 768-dimensional vectors (configured via `GEMINI_EMBEDDING_MODEL`)
+
+### Vector database
+
+[Qdrant](https://qdrant.tech) runs as a dedicated Docker container on port `6333`. Data is persisted in the `qdrant_data` Docker volume.
+
+### Full startup flow
+
+```bash
+# 1. Clone and configure
+git clone <repo-url>
+cd nodejs-2026q1-knowledge-hub
+cp .env.example .env
+# Edit .env — set GEMINI_API_KEY; for Docker leave RAG_VECTOR_DB_URL=http://vectordb:6333
+
+# 2. Start all services (db + vectordb + app)
+docker compose up --build
+
+# 3. Sign up and get a token
+curl -X POST http://localhost:4000/auth/signup \
+  -H 'Content-Type: application/json' \
+  -d '{"login":"admin","password":"admin123"}'
+
+TOKEN=$(curl -s -X POST http://localhost:4000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"login":"admin","password":"admin123"}' | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+# 4. Build the vector index from published articles
+curl -X POST http://localhost:4000/ai/rag/index \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"onlyPublished": true}'
+
+# 5. Semantic search
+curl -X POST http://localhost:4000/ai/rag/search \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"query": "how to use TypeScript generics", "limit": 3}'
+
+# 6. RAG chat
+curl -X POST http://localhost:4000/ai/rag/chat \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"question": "What topics are covered in the knowledge base?"}'
+
+# 7. Remove an article from the index
+curl -X DELETE http://localhost:4000/ai/rag/index/articles/<article-uuid> \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### RAG endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/ai/rag/index` | Build or refresh vector index from articles |
+| POST | `/ai/rag/search` | Semantic search — returns ranked chunks with article attribution |
+| POST | `/ai/rag/chat` | RAG chat — grounded answer + sources + conversation memory |
+| DELETE | `/ai/rag/index/articles/:id` | Remove article vectors from index |
+
+### Environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `GEMINI_API_KEY` | — | Required. Google AI Studio API key |
+| `GEMINI_EMBEDDING_MODEL` | `text-embedding-004` | Embedding model |
+| `RAG_VECTOR_DB_URL` | `http://localhost:6333` | Qdrant URL (`http://vectordb:6333` in Docker) |
+| `RAG_VECTOR_COLLECTION` | `knowledge_hub_articles` | Qdrant collection name |
+| `RAG_CHUNK_SIZE` | `800` | Characters per chunk |
+| `RAG_CHUNK_OVERLAP` | `200` | Overlap between chunks |
+| `RAG_CONVERSATION_MAX_MESSAGES` | `20` | Max messages kept per conversation |
+
+### Known limitations
+
+- **Free-tier quota**: Gemini free tier allows ~1500 embedding requests/day and ~15 RPM. Indexing many articles may hit the rate limit — wait and retry.
+- **Embedding latency**: Each chunk requires a separate Gemini API call. Indexing 3 articles (~10 chunks) takes ~10–20 seconds.
+- **Regional availability**: Gemini API may be unavailable in some regions. Use a VPN or a project with billing enabled if needed.
+- **In-memory conversation history**: Conversations are stored in memory and lost on app restart.
