@@ -1,4 +1,8 @@
-import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 
 interface EmbeddingResponse {
   embedding: { values: number[] };
@@ -9,7 +13,8 @@ export class EmbeddingService {
   private readonly logger = new Logger(EmbeddingService.name);
   private readonly apiKey = process.env.GEMINI_API_KEY;
   private readonly baseUrl =
-    process.env.GEMINI_API_BASE_URL ?? 'https://generativelanguage.googleapis.com';
+    process.env.GEMINI_API_BASE_URL ??
+    'https://generativelanguage.googleapis.com';
   private readonly model =
     process.env.GEMINI_EMBEDDING_MODEL ?? 'text-embedding-004';
 

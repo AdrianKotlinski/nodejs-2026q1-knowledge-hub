@@ -241,9 +241,7 @@ export class AiController {
     }
 
     const start = Date.now();
-    const history = dto.sessionId
-      ? this.session.getHistory(dto.sessionId)
-      : [];
+    const history = dto.sessionId ? this.session.getHistory(dto.sessionId) : [];
     const cacheKey = this.cache.buildKey(
       'generate',
       dto.prompt,

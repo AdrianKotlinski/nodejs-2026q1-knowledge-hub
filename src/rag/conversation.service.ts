@@ -18,7 +18,11 @@ export class ConversationService {
     return id ?? randomUUID();
   }
 
-  addMessage(conversationId: string, role: 'user' | 'assistant', content: string): void {
+  addMessage(
+    conversationId: string,
+    role: 'user' | 'assistant',
+    content: string,
+  ): void {
     const history = this.store.get(conversationId) ?? [];
     history.push({ role, content });
     if (history.length > this.maxMessages) {
